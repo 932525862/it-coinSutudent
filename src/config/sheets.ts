@@ -1,15 +1,20 @@
 // sheets.ts
-const SHEETS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbzHbJi_q96iwpREX9Y5TFogqjK2Iqn6fICHxIdhumR_f_Hs1DIEmwyjbQ3tV5E9V_LOZw/exec";
+const SHEETS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbwhuG_UGpP_40XPGETOaZA2gj69ouZZOA1pwgVIGaHKOYrle_c-06Wp7mBX1_MBn7NvZw/exec";
 
 export async function sendToSheets(payload: any): Promise<boolean> {
   try {
+    const body = new URLSearchParams();
+    body.set("data", JSON.stringify(payload));
+
     const res = await fetch(SHEETS_WEBAPP_URL, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
+      // MUHIM: header qo'ymang! (shunda preflight yo'q)
+      body,
     });
-    const data = await res.json().catch(() => null);
-    return res.ok && data?.ok === true;
+
+    // res.ok ba'zan true bo'ladi, ba'zan redirect bo'ladi.
+    // Ammo yozib qo'yishning o'zi ishlaydi.
+    return res.ok;
   } catch (e) {
     console.error("Sheets yuborishda xatolik:", e);
     return false;
