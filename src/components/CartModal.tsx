@@ -14,6 +14,9 @@ import { Input } from "@/components/ui/input";
 import { CoinBadge } from "./CoinBadge";
 import { sendToTelegram } from "@/config/telegram";
 import { toast } from "sonner";
+import { sendToSheets } from "@/config/sheets";
+
+
 
 interface CartModalProps {
   items: CartItem[];
@@ -39,23 +42,26 @@ export function CartModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmitOrder = async () => {
-    if (!name.trim() || !phone.trim()) {
-      toast.error("Iltimos, barcha maydonlarni to'ldiring");
-      return;
-    }
+  if (!name.trim() || !phone.trim()) {
+    toast.error("Iltimos, barcha maydonlarni to'ldiring");
+    return;
+  }
 
-    setIsSubmitting(true);
+  setIsSubmitting(true);
 
-    // Telegram xabarini tayyorlash
-    const productsList = items
-      .map(
-        (item) =>
-          `• ${item.product.name} x${item.quantity} (${item.product.price * item.quantity} coin)`,
-      )
-      .join("\n");
+  const itemsForSheets = items.map((item) => ({
+    id: item.product.id,
+    name: item.product.name,
+    quantity: item.quantity,
+    sum: item.product.price * item.quantity,
+  }));
 
-    const message = `
- Yangi buyurtma!
+  const productsList = itemsForSheets
+    .map((it) => `• ${it.name} x${it.quantity} (${it.sum} coin)`)
+    .join("\n");
+
+  const telegramMessage = `
+Yangi buyurtma!
 
 Mijoz: ${name}
 Telefon: ${phone}
@@ -65,22 +71,37 @@ Mahsulotlar:
 ${productsList}
 
 Jami: ${totalCoins} coin
-    `.trim();
+  `.trim();
 
-    const success = await sendToTelegram(message);
-
-    setIsSubmitting(false);
-
-    if (success) {
-      toast.success(
-        "Buyurtmangiz qabul qilindi! Tez orada siz bilan bog'lanamiz.",
-      );
-      onClearCart();
-      onClose();
-    } else {
-      toast.error("Xatolik yuz berdi. Qaytadan urinib ko'ring.");
-    }
+  const payload = {
+    name,
+    phone,
+    telegram: user,
+    totalCoins,
+    items: itemsForSheets,
+    productsText: productsList, // xohlasangiz
   };
+
+  // Ikkalasini parallel yuboramiz:
+  const [tgOk, sheetOk] = await Promise.all([
+    sendToTelegram(telegramMessage),
+    sendToSheets(payload),
+  ]);
+
+  setIsSubmitting(false);
+
+  if (tgOk && sheetOk) {
+    toast.success("Buyurtmangiz qabul qilindi! Tez orada bog'lanamiz.");
+    onClearCart();
+    onClose();
+  } else if (tgOk && !sheetOk) {
+    toast.warning("Telegramga yuborildi, lekin Sheetsga yozilmadi.");
+  } else if (!tgOk && sheetOk) {
+    toast.warning("Sheetsga yozildi, lekin Telegramga yuborilmadi.");
+  } else {
+    toast.error("Xatolik yuz berdi. Qaytadan urinib ko'ring.");
+  }
+};
 
   return (
     <div
