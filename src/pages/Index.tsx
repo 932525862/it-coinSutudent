@@ -7,7 +7,9 @@ import { CartModal } from "@/components/CartModal";
 import { products, Product, categories } from "@/data/products";
 import { useCart } from "@/hooks/useCart";
 import { Sparkles } from "lucide-react";
-import coin from "../coins.png"
+import { CoinInfoBanner } from "@/components/CoinBaner";
+
+
 const Index = () => {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [showCart, setShowCart] = useState(false);
@@ -38,11 +40,13 @@ const Index = () => {
         {/* Banner Carousel */}
         <BannerCarousel />
 
+        {/* Coin Info Banner */}
+        <CoinInfoBanner />
+
         {/* Products Section */}
         <section>
           <div className="flex items-center gap-2 mb-4">
-            
-            <img src={coin} alt="Coin" className="w-12 h-12" />
+            <Sparkles size={24} className="text-primary" />
             <h2 className="text-2xl font-bold text-foreground">Mahsulotlar</h2>
           </div>
 

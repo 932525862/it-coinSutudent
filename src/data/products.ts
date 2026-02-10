@@ -342,6 +342,53 @@ export const products: Product[] = [
   description: "Laptop uchun to'liq to'plam: sumka, sichqoncha, mouse pad.",
   category: "To'plamlar",
 },
+{
+  id: "40",
+  name: "AIRMESH G2 BLACK",
+  price: 1748,
+  images: [
+    "https://images.uzum.uz/d39p4sq1146g78h3e99g/original.jpg",
+    
+  ],
+  description: "AIRMESH G2 BLACK – bu zamonaviy va yengil qurilma bo‘lib, foydalanuvchiga qulaylik va ishonchlilikni taqdim etadi.",
+  category: "To'plamlar",
+},
+{
+  id: "41",
+  name: "Noutbuk sovutgichi NCP-063",
+  price: 334,
+  images: [
+    "https://images.uzum.uz/d1vqf1t2llnbjcofdddg/original.jpg",
+    
+  ],
+  description: "Noutbuk sovutgichi NCP-063 – bu zamonaviy va yengil qurilma bo‘lib, foydalanuvchiga qulaylik va ishonchlilikni taqdim etadi.",
+  category: "To'plamlar",
+},
+
+{
+  id: "42",
+  name: "Izuchayem React. 2-ye izdaniye, Chinnatambi Kirupa",
+  price: 1080,
+  images: [
+    "https://images.uzum.uz/cgrrr3ng49devoadogeg/original.jpg",
+    
+  ],
+  description: "Izuchayem React. 2-ye izdaniye, Chinnatambi Kirupa – bu kitob, React dasturlash tilini o'rganish uchun mo'ljallangan.",
+  category: "To'plamlar",
+},
+
+{
+  id: "43",
+  name: "Garri Potter, to'plami, Joann Rouling, o'zbek tilida",
+  price: 780,
+  images: [
+    "https://images.uzum.uz/clf6mjt6sfhvbd1ik13g/original.jpg",
+    
+  ],
+  description: "Garri Potter to'plami, Joann Rouling – bu kitob, Garri Potter seriyasini o'rganish uchun mo'ljallangan.",
+  category: "To'plamlar",
+},
+
 
   
 ];
