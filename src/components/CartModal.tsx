@@ -16,8 +16,6 @@ import { sendToTelegram } from "@/config/telegram";
 import { toast } from "sonner";
 import { sendToSheets } from "@/config/sheets";
 
-
-
 interface CartModalProps {
   items: CartItem[];
   totalCoins: number;
@@ -37,86 +35,129 @@ export function CartModal({
 }: CartModalProps) {
   const [showCheckout, setShowCheckout] = useState(false);
   const [name, setName] = useState("");
-  const [phone, setPhone] = useState("");
-  const [user, setUser] = useState("");
+  const [phone, setPhone] = useState(""); // +998XXXXXXXXX (13)
+  const [user, setUser] = useState(""); // telegram username
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // ✅ Telefonni faqat O‘zbekiston formati bo‘yicha kiritish:
+  // +998 + 9 ta raqam = 13 ta belgi
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let v = e.target.value;
+
+    // bo‘sh joylarni olib tashlaymiz
+    v = v.replace(/\s+/g, "");
+
+    // faqat + va raqam qolsin
+    v = v.replace(/[^+\d]/g, "");
+
+    // agar + bilan boshlanmasa, qo‘shamiz
+    if (!v.startsWith("+")) v = "+" + v.replace(/\+/g, "");
+
+    // + dan keyin faqat raqamlar qolsin
+    v = "+" + v.slice(1).replace(/[^\d]/g, "");
+
+    // +998 majburiy prefix
+    if (!v.startsWith("+998")) {
+      const digits = v.replace(/[^\d]/g, "");
+      const after = digits.startsWith("998") ? digits.slice(3) : digits;
+      v = "+998" + after;
+    }
+
+    // 13 ta belgidan oshirmaymiz
+    v = v.slice(0, 13);
+
+    setPhone(v);
+  };
+
+  // Telegram username ni tozalash: @ bo‘lsa olib tashlaymiz, probel yo‘q
+  const handleTelegramChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let v = e.target.value.trim();
+    v = v.replace(/\s+/g, "");
+    v = v.replace(/^@+/, "");
+    setUser(v);
+  };
+
   const handleSubmitOrder = async () => {
-  if (!name.trim() || !phone.trim()) {
-    toast.error("Iltimos, barcha maydonlarni to'ldiring");
-    return;
-  }
+    // ✅ name + phone + telegram majburiy, phone 13 ta belgi bo‘lsin
+    if (!name.trim() || !phone.trim() || !user.trim() || phone.length !== 13) {
+      toast.error("Iltimos, barcha maydonlarni to'ldiring");
+      return;
+    }
 
-  setIsSubmitting(true);
+    setIsSubmitting(true);
 
-  const itemsForSheets = items.map((item) => ({
-    id: item.product.id,
-    name: item.product.name,
-    quantity: item.quantity,
-    sum: item.product.price * item.quantity,
-  }));
+    const itemsForSheets = items.map((item) => ({
+      id: item.product.id,
+      name: item.product.name,
+      quantity: item.quantity,
+      sum: item.product.price * item.quantity,
+    }));
 
-  const productsList = itemsForSheets
-    .map((it) => `• ${it.name} x${it.quantity} (${it.sum} coin)`)
-    .join("\n");
+    const productsList = itemsForSheets
+      .map((it) => `• ${it.name} x${it.quantity} (${it.sum} coin)`)
+      .join("\n");
 
-  const telegramMessage = `
+    const telegramMessage = `
 Yangi buyurtma!
 
 Mijoz: ${name}
 Telefon: ${phone}
-Telegram: ${user}
+Telegram: @${user}
 
 Mahsulotlar:
 ${productsList}
 
 Jami: ${totalCoins} coin
-  `.trim();
+`.trim();
 
-  const payload = {
-    name,
-    phone,
-    telegram: user,
-    totalCoins,
-    items: itemsForSheets,
-    productsText: productsList, // xohlasangiz
+    const payload = {
+      name,
+      phone,
+      telegram: user,
+      totalCoins,
+      items: itemsForSheets,
+      productsText: productsList,
+    };
+
+    const [tgOk, sheetOk] = await Promise.all([
+      sendToTelegram(telegramMessage),
+      sendToSheets(payload),
+    ]);
+
+    setIsSubmitting(false);
+
+    if (tgOk && sheetOk) {
+      toast.success("Buyurtmangiz qabul qilindi! Tez orada bog'lanamiz.");
+      onClearCart();
+      onClose();
+    } else if (tgOk && !sheetOk) {
+      toast.warning("Telegramga yuborildi, lekin Sheetsga yozilmadi.");
+    } else if (!tgOk && sheetOk) {
+      toast.warning("Sheetsga yozildi, lekin Telegramga yuborilmadi.");
+    } else {
+      toast.error("Xatolik yuz berdi. Qaytadan urinib ko'ring.");
+    }
   };
-
-  // Ikkalasini parallel yuboramiz:
-  const [tgOk, sheetOk] = await Promise.all([
-    sendToTelegram(telegramMessage),
-    sendToSheets(payload),
-  ]);
-
-  setIsSubmitting(false);
-
-  if (tgOk && sheetOk) {
-    toast.success("Buyurtmangiz qabul qilindi! Tez orada bog'lanamiz.");
-    onClearCart();
-    onClose();
-  } else if (tgOk && !sheetOk) {
-    toast.warning("Telegramga yuborildi, lekin Sheetsga yozilmadi.");
-  } else if (!tgOk && sheetOk) {
-    toast.warning("Sheetsga yozildi, lekin Telegramga yuborilmadi.");
-  } else {
-    toast.error("Xatolik yuz berdi. Qaytadan urinib ko'ring.");
-  }
-};
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-foreground/50 backdrop-blur-sm animate-fade-in"
+      className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-foreground/50 backdrop-blur-sm animate-fade-in"
       onClick={onClose}
     >
       <div
-        className="relative w-full max-w-lg max-h-[90vh] bg-card rounded-2xl overflow-hidden shadow-2xl animate-fade-in flex flex-col"
+        className="
+          relative w-full max-w-lg
+          max-h-[calc(100dvh-1rem)] sm:max-h-[calc(100dvh-2rem)]
+          bg-card rounded-2xl overflow-hidden shadow-2xl animate-fade-in
+          flex flex-col min-h-0
+        "
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-border">
+        <div className="shrink-0 flex items-center justify-between p-3 sm:p-4 border-b border-border">
           <div className="flex items-center gap-2">
             <ShoppingBag size={24} className="text-primary" />
-            <h2 className="text-xl font-bold text-card-foreground">
+            <h2 className="text-lg sm:text-xl font-bold text-card-foreground">
               {showCheckout ? "Buyurtma berish" : "Savat"}
             </h2>
           </div>
@@ -129,9 +170,8 @@ Jami: ${totalCoins} coin
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-4">
+        <div className="flex-1 min-h-0 overflow-y-auto p-3 sm:p-4">
           {!showCheckout ? (
-            // Cart Items
             items.length === 0 ? (
               <div className="text-center py-12">
                 <ShoppingBag
@@ -150,7 +190,7 @@ Jami: ${totalCoins} coin
                     <img
                       src={item.product.images[0]}
                       alt={item.product.name}
-                      className="w-20 h-20 object-cover rounded-lg"
+                      className="w-20 h-20 object-cover rounded-lg flex-shrink-0"
                     />
 
                     <div className="flex-1 min-w-0">
@@ -217,11 +257,15 @@ Jami: ${totalCoins} coin
                 </label>
                 <Input
                   value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="+998 90 123 45 67"
-                  type="tel"
+                  onChange={handlePhoneChange}
+                  placeholder="+998901234567"
+                  inputMode="numeric"
+                  maxLength={13}
                   className="bg-muted/50"
                 />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Format: +998XXXXXXXXX (13 ta belgi)
+                </p>
               </div>
 
               <div>
@@ -230,8 +274,8 @@ Jami: ${totalCoins} coin
                 </label>
                 <Input
                   value={user}
-                  onChange={(e) => setUser(e.target.value)}
-                  placeholder="Telegram username"
+                  onChange={handleTelegramChange}
+                  placeholder="masalan: username"
                   className="bg-muted/50"
                 />
               </div>
@@ -243,10 +287,12 @@ Jami: ${totalCoins} coin
                 <div className="space-y-1 text-sm text-muted-foreground">
                   {items.map((item) => (
                     <div key={item.product.id} className="flex justify-between">
-                      <span>
+                      <span className="pr-3">
                         {item.product.name} x{item.quantity}
                       </span>
-                      <span>{item.product.price * item.quantity} coin</span>
+                      <span className="whitespace-nowrap">
+                        {item.product.price * item.quantity} coin
+                      </span>
                     </div>
                   ))}
                 </div>
@@ -261,12 +307,12 @@ Jami: ${totalCoins} coin
 
         {/* Footer */}
         {items.length > 0 && (
-          <div className="p-4 border-t border-border">
+          <div className="shrink-0 p-3 sm:p-4 border-t border-border">
             {!showCheckout ? (
-              <div className="flex items-center justify-between">
-                <div>
+              <div className="flex items-center justify-between gap-3">
+                <div className="min-w-0">
                   <p className="text-sm text-muted-foreground">Jami</p>
-                  <p className="text-2xl font-bold text-coin">
+                  <p className="text-xl sm:text-2xl font-bold text-coin truncate">
                     {totalCoins} coin
                   </p>
                 </div>

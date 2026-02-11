@@ -46,7 +46,7 @@
           {/* Products Section */}
           <section>
             <div className="flex items-center gap-2 mb-4">
-              <Sparkles size={24} className="text-primary" />
+              {/* <Sparkles size={24} className="text-primary" /> */}
               <h2 className="text-2xl font-bold text-foreground">Mahsulotlar</h2>
             </div>
 

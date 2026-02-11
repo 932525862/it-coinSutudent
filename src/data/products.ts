@@ -9,7 +9,9 @@ export interface Product {
   description?: string;
   category?: string;
 }
-
+import chegrma from "../asstets/chegrma.jpg"
+import chegrma1 from "../asstets/chegrma.png"
+import chegrma2 from "../asstets/cheegrma.png"
 export const categories = [
   "Barchasi",
   "Smart soatlar",
@@ -21,6 +23,8 @@ export const categories = [
   "Aksessuarlar",
   "To'plamlar",
   "Telefonlar",
+  "CHEGIRMA"
+  
   
 ];
 
@@ -388,6 +392,37 @@ export const products: Product[] = [
   description: "Garri Potter to'plami, Joann Rouling – bu kitob, Garri Potter seriyasini o'rganish uchun mo'ljallangan.",
   category: "To'plamlar",
 },
+{
+    id: "44",
+    name: "IT TIME Academy ga 50% chegirma",
+    price: 1880,
+    images: [
+      chegrma
+    ],
+    description: "IT TIME ACADEMY GA  50%   CHEGIRMA.",
+    category: "CHEGIRMA",
+  },
+  {
+    id: "45",
+    name: "IT TIME Academy ga 30% chegirma",
+    price: 1880,
+    images: [
+      chegrma2
+    ],
+    description: "IT TIME ACADEMY GA  30%   CHEGIRMA.",
+    category: "CHEGIRMA",
+  },
+
+  {
+    id: "46",
+    name: "IT TIME Academy ga 20% chegirma",
+    price: 1880,
+    images: [
+      chegrma1
+    ],
+    description: "IT TIME ACADEMY GA  20%   CHEGIRMA.",
+    category: "CHEGIRMA",
+  },
 
 
   
